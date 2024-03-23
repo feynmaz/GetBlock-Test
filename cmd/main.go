@@ -1,15 +1,20 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 
+	"github.com/feynmaz/GetBlock-Test/adapters"
+	"github.com/feynmaz/GetBlock-Test/app"
 	"github.com/feynmaz/GetBlock-Test/config"
 	"github.com/feynmaz/GetBlock-Test/tools/logger"
 )
+
+type getBlockNumberResult struct {
+	ID      string `json:"id"`
+	JsonRpc string `json:"jsonrpc"`
+	Result  string `json:"result"`
+}
 
 func main() {
 	if err := run(); err != nil {
@@ -25,35 +30,9 @@ func run() error {
 	}
 
 	url := fmt.Sprintf("https://go.getblock.io/%s", cfg.AccessToken)
-	bodyJson := `{
-		"id": "blockNumber",
-		"jsonrpc": "2.0",
-		"method": "eth_getBlockByNumber",
-		"params": [
-			"latest",
-			false
-		]
-	}`
-	requestBody := bytes.NewBuffer([]byte(bodyJson))
-	request, err := http.NewRequest("POST", url, requestBody)
-	if err != nil {
-		return fmt.Errorf("failed to create request: %w", err)
-	}
-	request.Header.Add("Content-Type", "application/json")
+	blockGetter := adapters.NewGetBlockAdapter(url)
+	app := app.NewApp(blockGetter)
 
-	response, err := http.DefaultClient.Do(request)
-	if err != nil {
-		return fmt.Errorf("failed to do request: %w", err)
-	}
-	defer response.Body.Close()
-
-	responseBody, err := io.ReadAll(response.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read response body: %w", err)
-	}
-
-	// Print the response body
-	fmt.Println("Response:", string(responseBody))
-
+	fmt.Println(app)
 	return nil
 }
