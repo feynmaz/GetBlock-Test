@@ -3,7 +3,7 @@ package balance
 import (
 	"math/big"
 
-	"github.com/feynmaz/GetBlock-Test/block"
+	"github.com/feynmaz/GetBlock-Test/transaction"
 )
 
 type Service struct{}
@@ -12,28 +12,26 @@ func NewService() *Service {
 	return &Service{}
 }
 
-func (s *Service) GetBalances(blocks []block.Block) Balances {
+func (s *Service) GetBalances(transactions []transaction.Transaction) Balances {
 	balances := make(Balances)
 	var ok bool
 	var balanceFrom *big.Int
 	var balanceTo *big.Int
 
-	for _, b := range blocks {
-		for _, transaction := range b.Transactions {
-			if balanceFrom, ok = balances[address(transaction.From)]; !ok {
-				balanceFrom = big.NewInt(0)
-			}
-			newBalanceFrom := big.NewInt(0)
-			newBalanceFrom.Sub(balanceFrom, transaction.Value)
-			balances[address(transaction.From)] = newBalanceFrom
-
-			if balanceTo, ok = balances[address(transaction.To)]; !ok {
-				balanceTo = big.NewInt(0)
-			}
-			newBalanceTo := big.NewInt(0)
-			newBalanceTo.Add(balanceTo, transaction.Value)
-			balances[address(transaction.To)] = newBalanceTo
+	for _, transaction := range transactions {
+		if balanceFrom, ok = balances[address(transaction.From)]; !ok {
+			balanceFrom = big.NewInt(0)
 		}
+		newBalanceFrom := big.NewInt(0)
+		newBalanceFrom.Sub(balanceFrom, transaction.Value)
+		balances[address(transaction.From)] = newBalanceFrom
+
+		if balanceTo, ok = balances[address(transaction.To)]; !ok {
+			balanceTo = big.NewInt(0)
+		}
+		newBalanceTo := big.NewInt(0)
+		newBalanceTo.Add(balanceTo, transaction.Value)
+		balances[address(transaction.To)] = newBalanceTo
 	}
 	return balances
 }

@@ -5,33 +5,37 @@ import (
 	"fmt"
 
 	"github.com/feynmaz/GetBlock-Test/balance"
-	"github.com/feynmaz/GetBlock-Test/block"
+	"github.com/feynmaz/GetBlock-Test/transaction"
 )
 
 var (
-	ErrGetBlocks = errors.New("failed to get latest blocks")
+	ErrGetTransactions = errors.New("failed to get transactions")
 )
 
 type app struct {
-	blockGetter    block.BlockGetter
-	balanceService balance.Service
+	transactionsGetter transaction.TransactionsGetter
+	balanceService     balance.Service
 }
 
-func NewApp(blockGetter block.BlockGetter) *app {
+func NewApp(transactionsGetter transaction.TransactionsGetter) *app {
 	return &app{
-		blockGetter: blockGetter,
+		transactionsGetter: transactionsGetter,
 	}
 }
 
-func (a *app) GetBiggestBalanceChange(blockCount uint) (string, error) {
-	blocks, err := a.blockGetter.GetLatestBlocks(blockCount)
-	if err != nil {
-		return "", fmt.Errorf("%w: %w", ErrGetBlocks, err)
+func (a *app) GetBiggestBalanceChange(blockCount int) (string, error) {
+	if blockCount <= 0 {
+		return "", transaction.ErrNoBlocksRead
 	}
 
-	balances := a.balanceService.GetBalances(blocks)
+	transactions, err := a.transactionsGetter.GetTransactions(blockCount)
+	if err != nil {
+		return "", fmt.Errorf("%w: %w", ErrGetTransactions, err)
+	}
+
+	balances := a.balanceService.GetBalances(transactions)
 	address, change := a.balanceService.GetBiggestBalanceChange(balances)
-	
+
 	fmt.Printf("address %s changed for %s Gwei in last %d blocks", address, change, blockCount)
 
 	return string(address), nil

@@ -9,7 +9,6 @@ import (
 )
 
 type config struct {
-	Port        int    `envconfig:"PORT" default:"8080"`
 	LogLevel    string `envconfig:"LOG_LEVEL" default:"info"`
 	LogJson     bool   `envconfig:"LOG_JSON" default:"false"`
 	AccessToken string `envconfig:"ACCESS_TOKEN" required:"true"`

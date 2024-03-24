@@ -1,10 +1,6 @@
-package block
+package transaction
 
 import "math/big"
-
-type Block struct {
-	Transactions []Transaction
-}
 
 type Transaction struct {
 	From  string
