@@ -29,12 +29,16 @@ func (a *app) GetBiggestBalanceChange(blockCount int) (string, error) {
 		return "", transaction.ErrNoBlocksRead
 	}
 
+	logrus.Info("getting transactions")
 	transactions, err := a.transactionsGetter.GetTransactions(blockCount)
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", ErrGetTransactions, err)
 	}
 
+	logrus.Info("calculating balances")
 	balances := a.balanceService.GetBalances(transactions)
+
+	logrus.Info("calculating biggest balance change")
 	address, change := a.balanceService.GetBiggestBalanceChange(balances)
 
 	logrus.Infof("address %s changed for %s Gwei in the last %d blocks", address, change, blockCount)

@@ -7,6 +7,7 @@ import (
 	"github.com/feynmaz/GetBlock-Test/tools/hex"
 	"github.com/feynmaz/GetBlock-Test/tools/http"
 	"github.com/feynmaz/GetBlock-Test/transaction"
+	"github.com/sirupsen/logrus"
 )
 
 type GetBlockAdapter struct {
@@ -49,6 +50,10 @@ func (a *GetBlockAdapter) GetTransactions(numberOfBlocks int) ([]transaction.Tra
 		}
 
 		blockHash = block.Result.ParentHash
+
+		if i%10 == 0 {
+			logrus.Infof("read %d blocks, %d left", i+1, numberOfBlocks-i-1)
+		}
 	}
 
 	return transactions, nil

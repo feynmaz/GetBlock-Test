@@ -20,6 +20,10 @@ func DoPostRequest(url, requestBodyRaw string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to do request: %w", err)
 	}
 	defer response.Body.Close()
+	
+	if response.StatusCode != 200 {
+		return nil, fmt.Errorf("status: %d", response.StatusCode)
+	}
 
 	responseBody, err := io.ReadAll(response.Body)
 	if err != nil {
