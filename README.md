@@ -12,6 +12,22 @@ https://getblock.io/docs/eth/json-rpc/eth_eth_getblockbynumber/
 
 > Важно: API ключи в репозитории не хранить, не использовать пакеты go-ethereum и подобные ему
 
+## Запуск
+1. Скачать репозиторий
+```sh
+git clone https://github.com/feynmaz/GetBlock-Test.git
+```
+
+2. Установить пакеты
+```sh
+go mod tidy
+```
+
+3. Запустить с переменной ACCESS_TOKEN
+```sh
+ACCESS_TOKEN=<token> go run cmd/main.go
+```
+
 ## Алгоритм обращений к GetBlock.io API
 > Реализовано в adapters/getblock/adapter.go
 1. Получить номер последнего блока.
@@ -37,7 +53,7 @@ https://getblock.io/docs/eth/json-rpc/eth_eth_getblockbynumber/
 ```
 хеш = "Result"."Hash".
 
-3. N раз, где N - количество последних блоков, заданное пользователем (в cmd/main.go):
+3. N раз, где N - количество последних блоков, заданное пользователем (в [cmd/main.go:22](https://github.com/feynmaz/GetBlock-Test/blob/master/cmd/main.go#L22)):
     1. Получить блок с транзакциями по хешу.
     ```js
     {
@@ -60,7 +76,7 @@ https://getblock.io/docs/eth/json-rpc/eth_eth_getblockbynumber/
 > Реализовано в balance/service.go
 
 В мапе хранятся адреса с балансом. Ключ - адрес, значение - баланс в Gwei.
-```
+```go
 map[string]*big.Int
 ```
 
