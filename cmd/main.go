@@ -30,7 +30,7 @@ func run() error {
 	transactionsGetter := getblock.NewGetBlockAdapter(url)
 	app := app.NewApp(transactionsGetter)
 
-	var blockCount int = 100
+	var blockCount int = 10
 	addressWithBiggestChange, err := app.GetBiggestBalanceChange(blockCount)
 	if err != nil {
 		return fmt.Errorf("failed to get biggest balance change: %w", err)

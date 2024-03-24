@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/feynmaz/GetBlock-Test/tools/hex"
 	"github.com/feynmaz/GetBlock-Test/tools/http"
 	"github.com/feynmaz/GetBlock-Test/transaction"
 )
@@ -16,24 +17,44 @@ func NewGetBlockAdapter(url string) *GetBlockAdapter {
 	return &GetBlockAdapter{url: url}
 }
 
-// Implements BlockGetter interface
+// Implements TransactionsGetter interface
 func (a *GetBlockAdapter) GetTransactions(numberOfBlocks int) ([]transaction.Transaction, error) {
-	// lastBlockNumber, err := a.getLastBlockNumber()
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to get last block number: %w", err)
-	// }
+	lastBlockNumber, err := a.getLastBlockNumber()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get last block number: %w", err)
+	}
 
-	// blocks := make([]block.Block, n)
-	// blockNumber := lastBlockNumber
+	transactions := make([]transaction.Transaction, 0, numberOfBlocks)
+	blockNumber := lastBlockNumber
 
-	// for i := 0; i < int(n); i++ {
-	// 	block, err := a.GetBlockByNumber(blockNumber)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf()
-	// 	}
-	// }
+	for i := 0; i < numberOfBlocks; i++ {
+		block, err := a.getBlockByNumber(blockNumber)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get block by number: %w", err)
+		}
 
-	return nil, nil
+		for _, tr := range block.Result.Transactions {
+
+			value, err := hex.HexToBigInt(tr.Value)
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert hex to big int: %w", err)
+			}
+
+			transaction := transaction.Transaction{
+				From:  tr.From,
+				To:    tr.To,
+				Value: value,
+			}
+			transactions = append(transactions, transaction)
+		}
+
+		blockNumber, err = a.getBlockNumberFromHash(block.Result.ParentHash)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get block number from hash: %w", err)
+		}
+	}
+
+	return transactions, nil
 }
 
 func (a *GetBlockAdapter) getLastBlockNumber() (string, error) {
@@ -57,7 +78,7 @@ func (a *GetBlockAdapter) getLastBlockNumber() (string, error) {
 	return blockNumber.Result, nil
 }
 
-func (a *GetBlockAdapter) GetBlockByNumber(blockNumber string) (Block, error) {
+func (a *GetBlockAdapter) getBlockByNumber(blockNumber string) (Block, error) {
 	getBlockByNumber := fmt.Sprintf(`{
 		"jsonrpc": "2.0",
 		"method": "eth_getBlockByNumber",
@@ -83,4 +104,31 @@ func (a *GetBlockAdapter) GetBlockByNumber(blockNumber string) (Block, error) {
 	}
 
 	return block, nil
+}
+
+func (a *GetBlockAdapter) getBlockNumberFromHash(blockHash string) (string, error) {
+	getBlockByNumber := fmt.Sprintf(`{
+		"jsonrpc": "2.0",
+		"method": "eth_getBlockByHash",
+		"params": [
+			"%s",
+			false
+		],
+		"id": "getblock.io"
+	}`, blockHash)
+
+	responseBody, err := http.DoPostRequest(a.url, getBlockByNumber)
+	if err != nil {
+		return "", fmt.Errorf("failed to do post request: %w", err)
+	}
+
+	var res struct {
+		Result struct {
+			Number string `json:"number"`
+		} `json:"result"`
+	}
+	if err := json.Unmarshal(responseBody, &res); err != nil {
+		return "", fmt.Errorf("failed to unmarshall result: %w", err)
+	}
+	return res.Result.Number, nil
 }

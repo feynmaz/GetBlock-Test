@@ -6,6 +6,7 @@ import (
 
 	"github.com/feynmaz/GetBlock-Test/balance"
 	"github.com/feynmaz/GetBlock-Test/transaction"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -36,7 +37,7 @@ func (a *app) GetBiggestBalanceChange(blockCount int) (string, error) {
 	balances := a.balanceService.GetBalances(transactions)
 	address, change := a.balanceService.GetBiggestBalanceChange(balances)
 
-	fmt.Printf("address %s changed for %s Gwei in last %d blocks", address, change, blockCount)
+	logrus.Infof("address %s changed for %s Gwei in last %d blocks \n", address, change, blockCount)
 
 	return string(address), nil
 }
