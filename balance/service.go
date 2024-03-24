@@ -15,17 +15,22 @@ func NewService() *Service {
 
 func (s *Service) GetBalances(blocks []block.Block) Balances {
 	balances := make(Balances)
+	var ok bool
+	var balanceFrom *big.Int
+	var balanceTo *big.Int
 
 	for _, b := range blocks {
 		for _, transaction := range b.Transactions {
-			addressFrom := address(transaction.From)
-			balanceFrom := balances[addressFrom]
+			if balanceFrom, ok = balances[address(transaction.From)]; !ok {
+				balanceFrom = big.NewInt(0)
+			}
 			newBalanceFrom := big.NewInt(0)
 			newBalanceFrom.Sub(balanceFrom, transaction.Value)
 			balances[address(transaction.From)] = newBalanceFrom
 
-			addressTo := address(transaction.To)
-			balanceTo := balances[addressTo]
+			if balanceTo, ok = balances[address(transaction.To)]; !ok {
+				balanceTo = big.NewInt(0)
+			}
 			newBalanceTo := big.NewInt(0)
 			newBalanceTo.Add(balanceTo, transaction.Value)
 			balances[address(transaction.To)] = newBalanceTo
