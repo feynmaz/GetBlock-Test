@@ -1,11 +1,5 @@
 package getblock
 
-type BlockNumber struct {
-	ID      string `json:"id"`
-	JsonRpc string `json:"jsonrpc"`
-	Result  string `json:"result"`
-}
-
 type Block struct {
 	ID      string `json:"id"`
 	Jsonrpc string `json:"jsonrpc"`

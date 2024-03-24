@@ -19,17 +19,16 @@ func NewGetBlockAdapter(url string) *GetBlockAdapter {
 
 // Implements TransactionsGetter interface
 func (a *GetBlockAdapter) GetTransactions(numberOfBlocks int) ([]transaction.Transaction, error) {
-	lastBlockNumber, err := a.getLastBlockNumber()
+	lastBlockHash, err := a.getLastBlockHash()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get last block number: %w", err)
 	}
 
-	// TODO: getBlockNumberFromHash in goroutine
 	transactions := make([]transaction.Transaction, 0, numberOfBlocks)
-	blockNumber := lastBlockNumber
+	blockHash := lastBlockHash
 
 	for i := 0; i < numberOfBlocks; i++ {
-		block, err := a.getBlockByNumber(blockNumber)
+		block, err := a.getBlockByHash(blockHash)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get block by number: %w", err)
 		}
@@ -49,16 +48,13 @@ func (a *GetBlockAdapter) GetTransactions(numberOfBlocks int) ([]transaction.Tra
 			transactions = append(transactions, transaction)
 		}
 
-		blockNumber, err = a.getBlockNumberFromHash(block.Result.ParentHash)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get block number from hash: %w", err)
-		}
+		blockHash = block.Result.ParentHash
 	}
 
 	return transactions, nil
 }
 
-func (a *GetBlockAdapter) getLastBlockNumber() (string, error) {
+func (a *GetBlockAdapter) getLastBlockHash() (string, error) {
 	getBlockNumber := `{
 		"jsonrpc": "2.0",
 		"method": "eth_blockNumber",
@@ -71,24 +67,51 @@ func (a *GetBlockAdapter) getLastBlockNumber() (string, error) {
 		return "", fmt.Errorf("failed to do post request: %w", err)
 	}
 
-	var blockNumber BlockNumber
-	if err := json.Unmarshal(responseBody, &blockNumber); err != nil {
+	var res struct {
+		Result string `json:"result"`
+	}
+	if err := json.Unmarshal(responseBody, &res); err != nil {
 		return "", fmt.Errorf("failed to unmarshall result: %w", err)
 	}
 
-	return blockNumber.Result, nil
-}
-
-func (a *GetBlockAdapter) getBlockByNumber(blockNumber string) (Block, error) {
+	blockNumber := res.Result
 	getBlockByNumber := fmt.Sprintf(`{
 		"jsonrpc": "2.0",
 		"method": "eth_getBlockByNumber",
 		"params": [
 			"%s",
-			true
+			false
 		],
 		"id": "getblock.io"
 	}`, blockNumber)
+
+	responseBody, err = http.DoPostRequest(a.url, getBlockByNumber)
+	if err != nil {
+		return "", fmt.Errorf("failed to do post request: %w", err)
+	}
+
+	var block struct {
+		Result struct {
+			Hash string `json:"hash"`
+		} `json:"result"`
+	}
+	if err := json.Unmarshal(responseBody, &block); err != nil {
+		return "", fmt.Errorf("failed to unmarshall result: %w", err)
+	}
+
+	return block.Result.Hash, nil
+}
+
+func (a *GetBlockAdapter) getBlockByHash(blockHash string) (Block, error) {
+	getBlockByNumber := fmt.Sprintf(`{
+		"jsonrpc": "2.0",
+		"method": "eth_getBlockByHash",
+		"params": [
+			"%s",
+			true
+		],
+		"id": "getblock.io"
+	}`, blockHash)
 
 	responseBody, err := http.DoPostRequest(a.url, getBlockByNumber)
 	if err != nil {
@@ -101,35 +124,8 @@ func (a *GetBlockAdapter) getBlockByNumber(blockNumber string) (Block, error) {
 	}
 
 	if block.Result.Hash == "" {
-		return Block{}, fmt.Errorf("no block with number %s", blockNumber)
+		return Block{}, fmt.Errorf("no block with hash %s", blockHash)
 	}
 
 	return block, nil
-}
-
-func (a *GetBlockAdapter) getBlockNumberFromHash(blockHash string) (string, error) {
-	getBlockByNumber := fmt.Sprintf(`{
-		"jsonrpc": "2.0",
-		"method": "eth_getBlockByHash",
-		"params": [
-			"%s",
-			false
-		],
-		"id": "getblock.io"
-	}`, blockHash)
-
-	responseBody, err := http.DoPostRequest(a.url, getBlockByNumber)
-	if err != nil {
-		return "", fmt.Errorf("failed to do post request: %w", err)
-	}
-
-	var res struct {
-		Result struct {
-			Number string `json:"number"`
-		} `json:"result"`
-	}
-	if err := json.Unmarshal(responseBody, &res); err != nil {
-		return "", fmt.Errorf("failed to unmarshall result: %w", err)
-	}
-	return res.Result.Number, nil
 }
