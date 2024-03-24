@@ -24,6 +24,14 @@ go mod tidy
 ```
 
 3. Запустить с переменной ACCESS_TOKEN
+
+- windows
+```sh
+set ACCESS_TOKEN=<token> 
+go run cmd/main.go
+```
+
+- linux
 ```sh
 ACCESS_TOKEN=<token> go run cmd/main.go
 ```
