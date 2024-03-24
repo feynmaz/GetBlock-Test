@@ -35,7 +35,7 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("failed to get biggest balance change: %w", err)
 	}
-	fmt.Printf("address with biggest change: %s", addressWithBiggestChange)
+	logrus.Infof("address with the biggest change: %s", addressWithBiggestChange)
 
 	return nil
 }

@@ -24,6 +24,7 @@ func (a *GetBlockAdapter) GetTransactions(numberOfBlocks int) ([]transaction.Tra
 		return nil, fmt.Errorf("failed to get last block number: %w", err)
 	}
 
+	// TODO: getBlockNumberFromHash in goroutine
 	transactions := make([]transaction.Transaction, 0, numberOfBlocks)
 	blockNumber := lastBlockNumber
 
