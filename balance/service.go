@@ -1,7 +1,6 @@
 package balance
 
 import (
-	"fmt"
 	"math/big"
 
 	"github.com/feynmaz/GetBlock-Test/block"
@@ -45,11 +44,12 @@ func (s *Service) GetBiggestBalanceChange(balances Balances) (address, *big.Int)
 
 	for address, balance := range balances {
 		absBalance := new(big.Int).Abs(balance)
-		if absBalance.Cmp(balance) == 1 {
+		if absBalance.Cmp(maxAbsBalance) == 1 {
 			maxAbsBalanceAddress = address
 			maxAbsBalance = absBalance
 		}
 	}
-	fmt.Println(maxAbsBalance)
-	return maxAbsBalanceAddress, maxAbsBalance
+	_ = maxAbsBalance
+
+	return maxAbsBalanceAddress, balances[maxAbsBalanceAddress]
 }
