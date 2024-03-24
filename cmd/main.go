@@ -4,17 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/feynmaz/GetBlock-Test/adapters"
 	"github.com/feynmaz/GetBlock-Test/app"
-	"github.com/feynmaz/GetBlock-Test/config"
-	"github.com/feynmaz/GetBlock-Test/tools/logger"
+	"github.com/feynmaz/GetBlock-Test/block"
 )
-
-type getBlockNumberResult struct {
-	ID      string `json:"id"`
-	JsonRpc string `json:"jsonrpc"`
-	Result  string `json:"result"`
-}
 
 func main() {
 	if err := run(); err != nil {
@@ -23,16 +15,25 @@ func main() {
 }
 
 func run() error {
-	cfg := config.GetDefault()
+	// cfg := config.GetDefault()
 
-	if err := logger.InitLogrus(cfg.LogLevel, cfg.LogJson); err != nil {
-		return fmt.Errorf("failed to init logger: %w", err)
-	}
+	// if err := logger.InitLogrus(cfg.LogLevel, cfg.LogJson); err != nil {
+	// 	return fmt.Errorf("failed to init logger: %w", err)
+	// }
 
-	url := fmt.Sprintf("https://go.getblock.io/%s", cfg.AccessToken)
-	blockGetter := adapters.NewGetBlockAdapter(url)
+	// url := fmt.Sprintf("https://go.getblock.io/%s", cfg.AccessToken)
+	// fmt.Println(url)
+
+	var blockCount uint = 100
+
+	blockGetter := block.NewMockBlockGetter()
 	app := app.NewApp(blockGetter)
 
-	fmt.Println(app)
+	addressWithBiggestChange, err := app.GetBiggestBalanceChange(blockCount)
+	if err != nil {
+		return fmt.Errorf("failed to get biggest balance change: %w", err)
+	}
+	fmt.Printf("address with biggest change: %s", addressWithBiggestChange)
+
 	return nil
 }
