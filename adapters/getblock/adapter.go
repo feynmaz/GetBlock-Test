@@ -35,6 +35,10 @@ func (a *GetBlockAdapter) GetTransactions(numberOfBlocks int) ([]transaction.Tra
 		}
 
 		for _, tr := range block.Result.Transactions {
+			if tr.BlockNumber == "" {
+				// If transaction is not successfull
+				continue
+			}
 
 			value, err := hex.HexToBigInt(tr.Value)
 			if err != nil {
