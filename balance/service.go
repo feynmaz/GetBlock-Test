@@ -48,7 +48,6 @@ func (s *Service) GetBiggestBalanceChange(balances Balances) (address, *big.Int)
 			maxAbsBalance = absBalance
 		}
 	}
-	_ = maxAbsBalance
 
 	return maxAbsBalanceAddress, balances[maxAbsBalanceAddress]
 }
