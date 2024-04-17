@@ -24,6 +24,7 @@ func (s *Service) GetBalances(transactions []transaction.Transaction) Balances {
 		}
 		newBalanceFrom := big.NewInt(0)
 		newBalanceFrom.Sub(balanceFrom, transaction.Value)
+		newBalanceFrom.Sub(balanceFrom, transaction.Gas)
 		balances[address(transaction.From)] = newBalanceFrom
 
 		if balanceTo, ok = balances[address(transaction.To)]; !ok {

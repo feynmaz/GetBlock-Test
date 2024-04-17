@@ -38,13 +38,18 @@ func (a *GetBlockAdapter) GetTransactions(numberOfBlocks int) ([]transaction.Tra
 
 			value, err := hex.HexToBigInt(tr.Value)
 			if err != nil {
-				return nil, fmt.Errorf("failed to convert hex to big int: %w", err)
+				return nil, fmt.Errorf("failed to convert value to int: %w", err)
+			}
+			gas, err := hex.HexToBigInt(tr.Gas)
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert gas to int: %w", err)
 			}
 
 			transaction := transaction.Transaction{
 				From:  tr.From,
 				To:    tr.To,
 				Value: value,
+				Gas:   gas,
 			}
 			transactions = append(transactions, transaction)
 		}

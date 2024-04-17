@@ -19,7 +19,7 @@ func main() {
 }
 
 func run() error {
-	var blockCount int = 100
+	var blockCount int = 10
 
 	cfg := config.GetDefault()
 
