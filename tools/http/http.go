@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func DoPostRequest(url, requestBodyRaw string) ([]byte, error) {
+func DoPostRequest(httpClient *http.Client, url, requestBodyRaw string) ([]byte, error) {
 	requestBody := bytes.NewBuffer([]byte(requestBodyRaw))
 	request, err := http.NewRequest("POST", url, requestBody)
 	if err != nil {
@@ -15,12 +15,12 @@ func DoPostRequest(url, requestBodyRaw string) ([]byte, error) {
 	}
 	request.Header.Add("Content-Type", "application/json")
 
-	response, err := http.DefaultClient.Do(request)
+	response, err := httpClient.Do(request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to do request: %w", err)
 	}
 	defer response.Body.Close()
-	
+
 	if response.StatusCode != 200 {
 		return nil, fmt.Errorf("status: %d", response.StatusCode)
 	}

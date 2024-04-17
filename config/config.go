@@ -4,14 +4,16 @@ import (
 	"encoding/json"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/kelseyhightower/envconfig"
 )
 
 type config struct {
-	LogLevel    string `envconfig:"LOG_LEVEL" default:"info"`
-	LogJson     bool   `envconfig:"LOG_JSON" default:"false"`
-	AccessToken string `envconfig:"ACCESS_TOKEN" required:"true"`
+	LogLevel    string        `envconfig:"LOG_LEVEL" default:"info"`
+	LogJson     bool          `envconfig:"LOG_JSON" default:"false"`
+	AccessToken string        `envconfig:"ACCESS_TOKEN" required:"true"`
+	ApiTimeout  time.Duration `envconfig:"API_TIMEOUT" default:"10s"`
 }
 
 var (

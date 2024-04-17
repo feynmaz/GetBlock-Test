@@ -29,7 +29,7 @@ func run() error {
 	logrus.Debugf("config: %s", cfg)
 
 	url := fmt.Sprintf("https://go.getblock.io/%s", cfg.AccessToken)
-	transactionsGetter := getblock.NewGetBlockAdapter(url)
+	transactionsGetter := getblock.NewGetBlockAdapter(cfg.ApiTimeout, url)
 	app := app.NewApp(transactionsGetter)
 
 	addressWithBiggestChange, err := app.GetBiggestBalanceChange(blockCount)

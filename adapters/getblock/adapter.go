@@ -3,19 +3,28 @@ package getblock
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/feynmaz/GetBlock-Test/tools/hex"
-	"github.com/feynmaz/GetBlock-Test/tools/http"
+	httptools "github.com/feynmaz/GetBlock-Test/tools/http"
 	"github.com/feynmaz/GetBlock-Test/transaction"
 	"github.com/sirupsen/logrus"
 )
 
 type GetBlockAdapter struct {
-	url string
+	httpClient *http.Client
+	url        string
 }
 
-func NewGetBlockAdapter(url string) *GetBlockAdapter {
-	return &GetBlockAdapter{url: url}
+func NewGetBlockAdapter(timeout time.Duration, url string) *GetBlockAdapter {
+	httpClient := &http.Client{
+		Timeout: timeout,
+	}
+	return &GetBlockAdapter{
+		httpClient: httpClient,
+		url:        url,
+	}
 }
 
 // Implements TransactionsGetter interface
@@ -76,7 +85,7 @@ func (a *GetBlockAdapter) getLastBlockHash() (string, error) {
 		"id": "getblock.io"
 	}`
 
-	responseBody, err := http.DoPostRequest(a.url, getBlockNumber)
+	responseBody, err := httptools.DoPostRequest(a.httpClient, a.url, getBlockNumber)
 	if err != nil {
 		return "", fmt.Errorf("failed to do post request: %w", err)
 	}
@@ -99,7 +108,7 @@ func (a *GetBlockAdapter) getLastBlockHash() (string, error) {
 		"id": "getblock.io"
 	}`, blockNumber)
 
-	responseBody, err = http.DoPostRequest(a.url, getBlockByNumber)
+	responseBody, err = httptools.DoPostRequest(a.httpClient, a.url, getBlockByNumber)
 	if err != nil {
 		return "", fmt.Errorf("failed to do post request: %w", err)
 	}
@@ -127,7 +136,7 @@ func (a *GetBlockAdapter) getBlockByHash(blockHash string) (Block, error) {
 		"id": "getblock.io"
 	}`, blockHash)
 
-	responseBody, err := http.DoPostRequest(a.url, getBlockByNumber)
+	responseBody, err := httptools.DoPostRequest(a.httpClient, a.url, getBlockByNumber)
 	if err != nil {
 		return Block{}, fmt.Errorf("failed to do post request: %w", err)
 	}
