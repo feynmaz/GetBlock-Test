@@ -128,7 +128,7 @@ func (a *GetBlockAdapter) getLastBlockHash() (string, error) {
 	return block.Result.Hash, nil
 }
 
-func (a *GetBlockAdapter) getBlockByHash(blockHash string) (Block, error) {
+func (a *GetBlockAdapter) getBlockByHash(blockHash string) (*Block, error) {
 	getBlockByNumber := fmt.Sprintf(`{
 		"jsonrpc": "2.0",
 		"method": "eth_getBlockByHash",
@@ -141,17 +141,17 @@ func (a *GetBlockAdapter) getBlockByHash(blockHash string) (Block, error) {
 
 	responseBody, err := httptools.DoPostRequest(a.httpClient, a.url, getBlockByNumber)
 	if err != nil {
-		return Block{}, fmt.Errorf("failed to do post request: %w", err)
+		return nil, fmt.Errorf("failed to do post request: %w", err)
 	}
 
 	var block Block
 	if err := json.Unmarshal(responseBody, &block); err != nil {
-		return Block{}, fmt.Errorf("failed to unmarshall result: %w", err)
+		return nil, fmt.Errorf("failed to unmarshall result: %w", err)
 	}
 
 	if block.Result.Hash == "" {
-		return Block{}, fmt.Errorf("no block with hash %s", blockHash)
+		return nil, fmt.Errorf("no block with hash %s", blockHash)
 	}
 
-	return block, nil
+	return &block, nil
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/feynmaz/GetBlock-Test/transaction"
 )
 
-func GetTransactionsFromBlock(block Block) ([]*transaction.Transaction, error) {
+func GetTransactionsFromBlock(block *Block) ([]*transaction.Transaction, error) {
 	transactions := make([]*transaction.Transaction, 0)
 
 	for _, tr := range block.Result.Transactions {
