@@ -12,7 +12,7 @@ func NewService() *Service {
 	return &Service{}
 }
 
-func (s *Service) GetBalances(transactions []transaction.Transaction) Balances {
+func (s *Service) GetBalances(transactions []*transaction.Transaction) Balances {
 	balances := make(Balances)
 	var ok bool
 	var balanceFrom *big.Int

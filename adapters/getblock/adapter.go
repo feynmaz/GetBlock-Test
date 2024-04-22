@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/feynmaz/GetBlock-Test/tools/hex"
 	httptools "github.com/feynmaz/GetBlock-Test/tools/http"
 	"github.com/feynmaz/GetBlock-Test/transaction"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 )
 
 type GetBlockAdapter struct {
@@ -28,14 +28,25 @@ func NewGetBlockAdapter(timeout time.Duration, url string) *GetBlockAdapter {
 }
 
 // Implements TransactionsGetter interface
-func (a *GetBlockAdapter) GetTransactions(numberOfBlocks int) ([]transaction.Transaction, error) {
+func (a *GetBlockAdapter) GetTransactions(numberOfBlocks int) ([]*transaction.Transaction, error) {
 	lastBlockHash, err := a.getLastBlockHash()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get last block number: %w", err)
 	}
 
-	transactions := make([]transaction.Transaction, 0, numberOfBlocks)
+	transactionsAll := make([]*transaction.Transaction, 0, numberOfBlocks)
 	blockHash := lastBlockHash
+
+	transactionsCh := make(chan []*transaction.Transaction, 1)
+	doneCh := make(chan struct{})
+	g := new(errgroup.Group)
+
+	go func() {
+		defer close(doneCh)
+		for tr := range transactionsCh {
+			transactionsAll = append(transactionsAll, tr...)
+		}
+	}()
 
 	for i := 0; i < numberOfBlocks; i++ {
 		block, err := a.getBlockByHash(blockHash)
@@ -43,38 +54,30 @@ func (a *GetBlockAdapter) GetTransactions(numberOfBlocks int) ([]transaction.Tra
 			return nil, fmt.Errorf("failed to get block by number: %w", err)
 		}
 
-		for _, tr := range block.Result.Transactions {
-			if tr.BlockNumber == "" {
-				// If transaction is not successfull
-				continue
-			}
+		g.Go(func() error {
 
-			value, err := hex.HexToBigInt(tr.Value)
+			transactionsNew, err := GetTransactionsFromBlock(block)
 			if err != nil {
-				return nil, fmt.Errorf("failed to convert value to int: %w", err)
+				return fmt.Errorf("failed to get transactions from block: %w", err)
 			}
-			gas, err := hex.HexToBigInt(tr.Gas)
-			if err != nil {
-				return nil, fmt.Errorf("failed to convert gas to int: %w", err)
-			}
+			transactionsCh <- transactionsNew
 
-			transaction := transaction.Transaction{
-				From:  tr.From,
-				To:    tr.To,
-				Value: value,
-				Gas:   gas,
-			}
-			transactions = append(transactions, transaction)
-		}
+			return nil
+		})
 
 		blockHash = block.Result.ParentHash
-
 		if i%10 == 0 {
 			logrus.Infof("read %d blocks, %d left", i+1, numberOfBlocks-i-1)
 		}
 	}
 
-	return transactions, nil
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
+	close(transactionsCh)
+	<-doneCh
+
+	return transactionsAll, nil
 }
 
 func (a *GetBlockAdapter) getLastBlockHash() (string, error) {
